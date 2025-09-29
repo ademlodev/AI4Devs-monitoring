@@ -1,4 +1,4 @@
-resource "aws_instance_frontend" {
+resource "aws_instance" "frontend" {  # Corregido: aws_instance_frontend -> aws_instance "frontend"
   ami           = data.aws_ami.amazon_linux_2.id
   instance_type = var.instance_type
   subnet_id     = aws_subnet.public[0].id
@@ -13,7 +13,7 @@ resource "aws_instance_frontend" {
   }
 }
 
-resource "aws_instance_backend" {
+resource "aws_instance" "backend" {  # Corregido: aws_instance_backend -> aws_instance "backend"
   ami           = data.aws_ami.amazon_linux_2.id
   instance_type = var.instance_type
   subnet_id     = aws_subnet.public[1].id
