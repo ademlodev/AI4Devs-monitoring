@@ -1,11 +1,11 @@
 # Crear la integración AWS-Datadog
 resource "datadog_integration_aws" "main" {
-  provider = datadog
-  account_id = data.aws_caller_identity.current.account_id
-  role_name  = "DatadogAWSIntegrationRole"
+  provider    = datadog
+  account_id  = data.aws_caller_identity.current.account_id
+  role_name   = "DatadogAWSIntegrationRole"
 }
 
-# IAM role for Datadog
+# Crear el rol IAM para Datadog
 resource "aws_iam_role" "datadog" {
   name = "DatadogAWSIntegrationRole"
 
@@ -15,7 +15,7 @@ resource "aws_iam_role" "datadog" {
       {
         Effect = "Allow"
         Principal = {
-          AWS = "arn:aws:iam::464622532012:root"
+          AWS = "arn:aws:iam::464622532012:root" # Cuenta oficial de Datadog
         }
         Action = "sts:AssumeRole"
         Condition = {
@@ -28,7 +28,7 @@ resource "aws_iam_role" "datadog" {
   })
 }
 
-# Attach required permissions
+# Adjuntar la política de permisos necesaria para Datadog
 resource "aws_iam_role_policy_attachment" "datadog" {
   role       = aws_iam_role.datadog.name
   policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"

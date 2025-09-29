@@ -1,9 +1,8 @@
-resource "aws_instance" "frontend" {  # Corregido: aws_instance_frontend -> aws_instance "frontend"
-  ami           = data.aws_ami.amazon_linux_2.id
-  instance_type = var.instance_type
-  subnet_id     = aws_subnet.public[0].id
-  key_name      = var.ssh_key_name
-
+resource "aws_instance" "frontend" {
+  ami                    = data.aws_ami.amazon_linux_2.id
+  instance_type          = var.instance_type
+  subnet_id              = aws_subnet.public[0].id
+  key_name              = var.ssh_key_name
   vpc_security_group_ids = [aws_security_group.frontend.id]
   user_data             = file("${path.module}/scripts/frontend_user_data.sh")
 
@@ -13,12 +12,11 @@ resource "aws_instance" "frontend" {  # Corregido: aws_instance_frontend -> aws_
   }
 }
 
-resource "aws_instance" "backend" {  # Corregido: aws_instance_backend -> aws_instance "backend"
-  ami           = data.aws_ami.amazon_linux_2.id
-  instance_type = var.instance_type
-  subnet_id     = aws_subnet.public[1].id
-  key_name      = var.ssh_key_name
-
+resource "aws_instance" "backend" {
+  ami                    = data.aws_ami.amazon_linux_2.id
+  instance_type          = var.instance_type
+  subnet_id              = aws_subnet.public[1].id
+  key_name              = var.ssh_key_name
   vpc_security_group_ids = [aws_security_group.backend.id]
   user_data             = file("${path.module}/scripts/backend_user_data.sh")
 
