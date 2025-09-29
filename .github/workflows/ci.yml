@@ -4,7 +4,9 @@ on:
   pull_request:
     branches:
       - main
-      - JGA
+  push:
+    branches:
+      - main
 
 jobs:
   build:
@@ -29,10 +31,51 @@ jobs:
           cd backend
           npm test
 
-  deploy:
+  terraform:
     runs-on: ubuntu-latest
     needs: build
-    if: github.event_name == 'pull_request'
+
+    defaults:
+      run:
+        working-directory: ./tf
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-region: eu-north-1
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Format
+        run: terraform fmt -check
+
+      - name: Terraform Plan
+        run: |
+          terraform plan -input=false \
+          -var="datadog_api_key=${{ secrets.DATADOG_API_KEY }}" \
+          -var="datadog_app_key=${{ secrets.DATADOG_APP_KEY }}"
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          terraform apply -auto-approve \
+          -var="datadog_api_key=${{ secrets.DATADOG_API_KEY }}" \
+          -var="datadog_app_key=${{ secrets.DATADOG_APP_KEY }}"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build, terraform]
+    if: github.event_name == 'pull_request' || (github.ref == 'refs/heads/main' && github.event_name == 'push')
 
     steps:
       - name: Checkout code
