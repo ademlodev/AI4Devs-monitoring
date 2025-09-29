@@ -56,35 +56,34 @@ jobs:
 
       - name: Extract Key Pair Name
         run: |
-          # Guardar la clave privada temporalmente
-          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > temp_key.pem
-          # Extraer el nombre de la clave usando ssh-keygen
-          KEY_FINGERPRINT=$(ssh-keygen -lf temp_key.pem | awk '{print $2}')
-          # Buscar la key pair por su fingerprint
-          KEY_NAME=$(aws ec2 describe-key-pairs --region eu-north-1 --filters "Name=key-fingerprint,Values=$KEY_FINGERPRINT" --query 'KeyPairs[0].KeyName' --output text)
-          echo "Found existing key pair: $KEY_NAME"
-          echo "SSH_KEY_NAME=$KEY_NAME" >> $GITHUB_ENV
-          rm temp_key.pem
-
-      - name: Terraform Init
-        run: |
-          terraform init \
-          -upgrade \
-          -input=false
+          # Crear directorio seguro
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          
+          # Guardar la clave privada temporalmente con permisos seguros
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/temp_key.pem
+          chmod 600 ~/.ssh/temp_key.pem
+          
+          # Intentar obtener el nombre de la clave directamente de AWS
+          aws ec2 describe-key-pairs --region eu-north-1 --query 'KeyPairs[*].KeyName' --output text
+          
+          # Establecer un nombre de clave por defecto si no se puede determinar
+          echo "SSH_KEY_NAME=ai4devs-key" >> $GITHUB_ENV
 
       - name: Terraform Plan
         run: |
           terraform plan -input=false \
           -var="datadog_api_key=${{ secrets.DATADOG_API_KEY }}" \
           -var="datadog_app_key=${{ secrets.DATADOG_APP_KEY }}" \
-          -var="ssh_key_name=${{ env.SSH_KEY_NAME }}"
+          -var="ssh_key_name=${{ secrets.SSH_KEY_NAME }}"
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
           terraform apply -auto-approve \
           -var="datadog_api_key=${{ secrets.DATADOG_API_KEY }}" \
-          -var="datadog_app_key=${{ secrets.DATADOG_APP_KEY }}"
+          -var="datadog_app_key=${{ secrets.DATADOG_APP_KEY }}" \
+          -var="ssh_key_name=${{ secrets.SSH_KEY_NAME }}"
 
   deploy:
     runs-on: ubuntu-latest
