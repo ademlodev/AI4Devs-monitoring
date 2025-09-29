@@ -51,7 +51,7 @@ jobs:
 
       - name: Upload to S3
         run: |
-          aws s3 cp backend/ s3://mi-ec2-con-github-actions/backend/ --recursive
+          aws s3 cp backend/ s3://ai4devsjga/backend/ --recursive
 
       - name: Add EC2 Host Key
         run: |
@@ -123,7 +123,7 @@ jobs:
               cd /home/ec2-user/backend
 
               # Download the code from S3
-              aws s3 cp s3://mi-ec2-con-github-actions/backend/ . --recursive
+              aws s3 cp s3://ai4devsjga/backend/ . --recursive
 
               # Install dependencies and run the application with PM2 on port 8080
               npm install
