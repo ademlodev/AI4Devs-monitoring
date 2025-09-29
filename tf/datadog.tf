@@ -122,40 +122,5 @@ locals {
   EOF
 }
 
-# Add to EC2 instances user data
-resource "aws_instance" "frontend" {
-  # ... existing configuration ...
-  user_data = <<-EOF
-    #!/bin/bash
-    # Install Datadog Agent
-    DD_API_KEY=${var.datadog_api_key} DD_SITE="datadoghq.eu" bash -c "$(curl -L https://s3.amazonaws.com/dd-agent/scripts/install_script.sh)"
-
-    # Configure Datadog Agent
-    echo "${local.datadog_agent_config}" > /etc/datadog-agent/datadog.yaml
-
-    # Start Datadog Agent
-    systemctl start datadog-agent
-
-    ${file("${path.module}/scripts/frontend_user_data.sh")}
-  EOF
-}
-
-resource "aws_instance" "backend" {
-  # ... existing configuration ...
-  user_data = <<-EOF
-    #!/bin/bash
-    # Install Datadog Agent
-    DD_API_KEY=${var.datadog_api_key} DD_SITE="datadoghq.eu" bash -c "$(curl -L https://s3.amazonaws.com/dd-agent/scripts/install_script.sh)"
-
-    # Configure Datadog Agent
-    echo "${local.datadog_agent_config}" > /etc/datadog-agent/datadog.yaml
-
-    # Start Datadog Agent
-    systemctl start datadog-agent
-
-    ${file("${path.module}/scripts/backend_user_data.sh")}
-  EOF
-}
-
 # Obtener la identidad actual de AWS
 data "aws_caller_identity" "current" {}
