@@ -59,14 +59,14 @@ jobs:
           # Crear directorio seguro
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          
+
           # Guardar la clave privada temporalmente con permisos seguros
           echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/temp_key.pem
           chmod 600 ~/.ssh/temp_key.pem
-          
+
           # Intentar obtener el nombre de la clave directamente de AWS
           aws ec2 describe-key-pairs --region eu-north-1 --query 'KeyPairs[*].KeyName' --output text
-          
+
           # Establecer un nombre de clave por defecto si no se puede determinar
           echo "SSH_KEY_NAME=ai4devs-key" >> $GITHUB_ENV
 
@@ -75,7 +75,7 @@ jobs:
           terraform plan -input=false \
           -var="datadog_api_key=${{ secrets.DATADOG_API_KEY }}" \
           -var="datadog_app_key=${{ secrets.DATADOG_APP_KEY }}" \
-          -var="ssh_key_name=${{ secrets.SSH_KEY_NAME }}"
+          -var="ssh_key_name=${SSH_KEY_NAME:-ai4devs-key}"
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -83,7 +83,7 @@ jobs:
           terraform apply -auto-approve \
           -var="datadog_api_key=${{ secrets.DATADOG_API_KEY }}" \
           -var="datadog_app_key=${{ secrets.DATADOG_APP_KEY }}" \
-          -var="ssh_key_name=${{ secrets.SSH_KEY_NAME }}"
+          -var="ssh_key_name=${SSH_KEY_NAME:-ai4devs-key}"
 
   deploy:
     runs-on: ubuntu-latest
