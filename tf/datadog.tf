@@ -4,8 +4,9 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 # Crear la integración AWS-Datadog con la sintaxis correcta
-resource "datadog_integration_aws_account" "main" {
-  account_id     = data.aws_caller_identity.current.account_id
+resource "datadog_integration_aws" "main" {
+  aws_account_id = data.aws_caller_identity.current.account_id
+  aws_partition  = data.aws_partition.current.partition
   role_name      = "DatadogAWSIntegrationRole"
   account_specific_namespace_rules = {
     lambda = true
