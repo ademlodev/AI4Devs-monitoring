@@ -5,13 +5,10 @@ data "aws_partition" "current" {}
 
 # Crear la integración AWS-Datadog con la sintaxis correcta
 resource "datadog_integration_aws" "main" {
-  aws_account_id = data.aws_caller_identity.current.account_id
-  aws_partition  = data.aws_partition.current.partition
-  role_name      = "DatadogAWSIntegrationRole"
-  account_specific_namespace_rules = {
-    lambda = true
-    ec2    = true
-  }
+  account_id = data.aws_caller_identity.current.account_id
+  role_name  = "DatadogAWSIntegrationRole"
+  filter_tags = ["env:${var.environment}"]
+  host_tags = ["env:${var.environment}"]
 }
 
 # Crear el rol IAM para Datadog
@@ -29,7 +26,7 @@ resource "aws_iam_role" "datadog" {
         Action = "sts:AssumeRole"
         Condition = {
           StringEquals = {
-            "sts:ExternalId" = datadog_integration_aws_account.main.external_id
+            "sts:ExternalId" = datadog_integration_aws.main.external_id
           }
         }
       }
