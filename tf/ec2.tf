@@ -1,4 +1,4 @@
-resource "aws_instance frontend" {
+resource "aws_instance_frontend" {
   ami           = data.aws_ami.amazon_linux_2.id
   instance_type = var.instance_type
   subnet_id     = aws_subnet.public[0].id
@@ -13,7 +13,7 @@ resource "aws_instance frontend" {
   }
 }
 
-resource "aws_instance backend" {
+resource "aws_instance_backend" {
   ami           = data.aws_ami.amazon_linux_2.id
   instance_type = var.instance_type
   subnet_id     = aws_subnet.public[1].id
