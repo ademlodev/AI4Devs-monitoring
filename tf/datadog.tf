@@ -1,7 +1,16 @@
-# Crear la integración AWS-Datadog
+# Obtener la identidad actual de AWS
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+# Crear la integración AWS-Datadog con la nueva sintaxis
 resource "datadog_integration_aws_account" "main" {
-  account_id = data.aws_caller_identity.current.account_id
-  role_name  = "DatadogAWSIntegrationRole"
+  aws_account_id = data.aws_caller_identity.current.account_id
+  aws_partition  = data.aws_partition.current.partition
+  account_specific_namespace_rules = {
+    lambda = true
+    ecs    = true
+  }
 }
 
 # Crear el rol IAM para Datadog
@@ -19,7 +28,7 @@ resource "aws_iam_role" "datadog" {
         Action = "sts:AssumeRole"
         Condition = {
           StringEquals = {
-            "sts:ExternalId" = datadog_integration_aws.main.external_id
+            "sts:ExternalId" = datadog_integration_aws_account.main.external_id
           }
         }
       }
@@ -31,6 +40,21 @@ resource "aws_iam_role" "datadog" {
 resource "aws_iam_role_policy_attachment" "datadog" {
   role       = aws_iam_role.datadog.name
   policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
+}
+
+# Configurar el agente de Datadog en las instancias EC2
+resource "aws_ssm_association" "datadog_agent" {
+  name = "AWS-ConfigureAWSPackage"
+
+  targets {
+    key    = "InstanceIds"
+    values = [aws_instance.frontend.id, aws_instance.backend.id]
+  }
+
+  parameters = {
+    Action = "Install"
+    Name   = "datadog-agent"
+  }
 }
 
 # Create Datadog monitors for EC2 instances
@@ -121,6 +145,3 @@ locals {
     DD_TAGS="env:${var.environment}"
   EOF
 }
-
-# Obtener la identidad actual de AWS
-data "aws_caller_identity" "current" {}
