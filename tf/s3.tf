@@ -1,5 +1,9 @@
 resource "aws_s3_bucket" "code_bucket" {
-  bucket = "ai4devs-project-code-bucket"
+  bucket = "ai4devsjga"
+}
+
+resource "aws_s3_bucket_acl" "code_bucket_acl" {
+  bucket = aws_s3_bucket.code_bucket.id
   acl    = "private"
 }
 
