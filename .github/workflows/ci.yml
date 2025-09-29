@@ -46,6 +46,8 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: "1.5.0"  # Especificamos una versión específica de Terraform
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -54,28 +56,24 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY }}
           aws-region: eu-north-1
 
-      - name: Extract Key Pair Name
+      - name: Terraform Init with Lock File Update
         run: |
-          # Crear directorio seguro
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
+          rm -f .terraform.lock.hcl || true
+          terraform init -upgrade
+          terraform providers lock \
+            -platform=linux_amd64 \
+            -platform=darwin_amd64 \
+            -platform=windows_amd64
 
-          # Guardar la clave privada temporalmente con permisos seguros
-          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/temp_key.pem
-          chmod 600 ~/.ssh/temp_key.pem
-
-          # Intentar obtener el nombre de la clave directamente de AWS
-          aws ec2 describe-key-pairs --region eu-north-1 --query 'KeyPairs[*].KeyName' --output text
-
-          # Establecer un nombre de clave por defecto si no se puede determinar
-          echo "SSH_KEY_NAME=ai4devs-key" >> $GITHUB_ENV
+      - name: Terraform Format
+        run: terraform fmt -check
 
       - name: Terraform Plan
         run: |
           terraform plan -input=false \
           -var="datadog_api_key=${{ secrets.DATADOG_API_KEY }}" \
           -var="datadog_app_key=${{ secrets.DATADOG_APP_KEY }}" \
-          -var="ssh_key_name=${SSH_KEY_NAME:-ai4devs-key}"
+          -var="ssh_key_name=${{ secrets.SSH_KEY_NAME }}"
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -83,7 +81,7 @@ jobs:
           terraform apply -auto-approve \
           -var="datadog_api_key=${{ secrets.DATADOG_API_KEY }}" \
           -var="datadog_app_key=${{ secrets.DATADOG_APP_KEY }}" \
-          -var="ssh_key_name=${SSH_KEY_NAME:-ai4devs-key}"
+          -var="ssh_key_name=${{ secrets.SSH_KEY_NAME }}"
 
   deploy:
     runs-on: ubuntu-latest
