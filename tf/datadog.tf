@@ -1,5 +1,6 @@
-# Existing AWS-Datadog integration
+# Crear la integración AWS-Datadog
 resource "datadog_integration_aws" "main" {
+  provider = datadog
   account_id = data.aws_caller_identity.current.account_id
   role_name  = "DatadogAWSIntegrationRole"
 }

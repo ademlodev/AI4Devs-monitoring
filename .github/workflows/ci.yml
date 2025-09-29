@@ -55,7 +55,10 @@ jobs:
           aws-region: eu-north-1
 
       - name: Terraform Init
-        run: terraform init
+        run: |
+          terraform init \
+          -upgrade \
+          -input=false
 
       - name: Terraform Format
         run: terraform fmt -check
