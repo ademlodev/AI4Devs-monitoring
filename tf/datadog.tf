@@ -30,7 +30,6 @@ resource "aws_iam_role_policy_attachment" "datadog" {
 # Crear la integración AWS-Datadog
 resource "datadog_integration_aws_account" "integration" {
   aws_account_id = data.aws_caller_identity.current.account_id
-  role_name      = 
   aws_partition  = "aws"
   auth_config {
     aws_auth_config_role {
