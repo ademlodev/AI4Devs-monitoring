@@ -36,11 +36,20 @@ resource "datadog_integration_aws_account" "integration" {
       role_name = "aws_iam_role.datadog.name"
     }
   }
-  # Configuración básica
   aws_regions {
     include_all = true
   }
   account_tags = ["env:${var.environment}"]
+  logs_config {
+    lambda_forwarder {}
+  }
+  metrics_config {
+    namespace_filters {}
+  }
+  resources_config {}
+  traces_config {
+    xray_services {}
+  }
 }
 
 
