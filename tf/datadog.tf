@@ -7,6 +7,23 @@ data "aws_partition" "current" {}
 resource "datadog_integration_aws_account" "main" {
   aws_account_id = data.aws_caller_identity.current.account_id
   aws_partition  = data.aws_partition.current.partition
+  aws_regions {}
+
+  auth_config {
+    aws_auth_config_role {
+      role_name = "DatadogIntegrationRole"
+    }
+  }
+  logs_config {
+    lambda_forwarder {}
+  }
+  metrics_config {
+    namespace_filters {}
+  }
+  resources_config {}
+  traces_config {
+    xray_services {}
+  }
 }
 
 # Crear el rol IAM para Datadog
