@@ -5,8 +5,8 @@ data "aws_partition" "current" {}
 
 # Crear la integración AWS-Datadog con la configuración básica
 resource "datadog_integration_aws" "integration" {
-  api_token = var.datadog_api_key
-  app_token = var.datadog_app_key
+  api_key = var.datadog_api_key
+  app_key = var.datadog_app_key
   access_key_id = "${aws_iam_access_key.datadog.id}"
   secret_access_key = "${aws_iam_access_key.datadog.secret}"
 }
