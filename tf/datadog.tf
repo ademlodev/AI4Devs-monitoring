@@ -3,32 +3,6 @@ data "aws_caller_identity" "current" {}
 
 data "aws_partition" "current" {}
 
-# Crear la integración AWS-Datadog
-resource "datadog_integration_aws_account" "integration" {
-  
-  aws_regions {
-    include_all = true
-  }
-  account_tags = ["env:${var.environment}"]
-  aws_account_id = data.aws_caller_identity.current.account_id
-  auth_config {
-    aws_auth_config_role {
-      role_name = "DatadogIntegrationRole"
-    }
-  }
-  aws_partition  = "aws"
-  logs_config {
-    lambda_forwarder {}
-  }
-  metrics_config {
-    namespace_filters {}
-  }
-  resources_config {}
-  traces_config {
-    xray_services {}
-  }
-}
-
 # Crear el rol IAM para Datadog
 resource "aws_iam_role" "datadog" {
   name = "DatadogIntegrationRole"
@@ -42,11 +16,6 @@ resource "aws_iam_role" "datadog" {
           AWS = "arn:aws:iam::464622532012:root" # Cuenta oficial de Datadog
         }
         Action = "sts:AssumeRole"
-        Condition = {
-          StringEquals = {
-            "sts:ExternalId" = datadog_integration_aws_account.integration.external_id
-          }
-        }
       }
     ]
   })
@@ -57,6 +26,21 @@ resource "aws_iam_role_policy_attachment" "datadog" {
   role       = aws_iam_role.datadog.name
   policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
 }
+
+# Crear la integración AWS-Datadog
+resource "datadog_integration_aws_account" "integration" {
+  aws_account_id = data.aws_caller_identity.current.account_id
+  role_name      = aws_iam_role.datadog.name
+  aws_partition  = "aws"
+
+  # Configuración básica
+  aws_regions {
+    include_all = true
+  }
+  account_tags = ["env:${var.environment}"]
+}
+
+
 
 # Create Datadog monitors for EC2 instances
 resource "datadog_monitor" "ec2_cpu" {
