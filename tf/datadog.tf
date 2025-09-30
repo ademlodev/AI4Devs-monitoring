@@ -5,19 +5,18 @@ data "aws_partition" "current" {}
 
 # Crear la integración AWS-Datadog
 resource "datadog_integration_aws_account" "integration" {
-  account_specific_namespace_rules = {
-    auto_scaling = true
-    opsworks = false
-    ec2 = true
+  
+  aws_regions {
+    include_all = true
   }
-  excluded_regions = [
-    "us-west-2",
-    "us-east-2"
-  ]
-  filter_tags = ["env:${var.environment}"]
-  host_tags = ["env:${var.environment}"]
-  account_id = data.aws_caller_identity.current.account_id
-  role_name = "DatadogIntegrationRole"
+  account_tags = ["env:${var.environment}"]
+  aws_account_id = data.aws_caller_identity.current.account_id
+  auth_config {
+    aws_auth_config_role {
+      role_name = "DatadogIntegrationRole"
+    }
+  }
+  aws_partition  = "aws"
 }
 
 # Crear el rol IAM para Datadog
