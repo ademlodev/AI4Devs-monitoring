@@ -3,27 +3,49 @@ data "aws_caller_identity" "current" {}
 
 data "aws_partition" "current" {}
 
-# Crear la integración AWS-Datadog con la configuración básica
-resource "datadog_integration_aws" "integration" {
-  api_key = var.datadog_api_key
-  app_key = var.datadog_app_key
-  access_key_id = "${aws_iam_access_key.datadog.id}"
-  secret_access_key = "${aws_iam_access_key.datadog.secret}"
+# Crear la integración AWS-Datadog
+resource "datadog_integration_aws_account" "integration" {
+  account_specific_namespace_rules = {
+    auto_scaling = true
+    opsworks = false
+    ec2 = true
+  }
+  excluded_regions = [
+    "us-west-2",
+    "us-east-2"
+  ]
+  filter_tags = ["env:${var.environment}"]
+  host_tags = ["env:${var.environment}"]
+  account_id = data.aws_caller_identity.current.account_id
+  role_name = "DatadogIntegrationRole"
 }
 
-# Crear el usuario IAM para Datadog
-resource "aws_iam_user" "datadog" {
-  name = "datadog-integration"
-}
+# Crear el rol IAM para Datadog
+resource "aws_iam_role" "datadog" {
+  name = "DatadogIntegrationRole"
 
-# Crear las credenciales de acceso para Datadog
-resource "aws_iam_access_key" "datadog" {
-  user = aws_iam_user.datadog.name
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::464622532012:root" # Cuenta oficial de Datadog
+        }
+        Action = "sts:AssumeRole"
+        Condition = {
+          StringEquals = {
+            "sts:ExternalId" = datadog_integration_aws_account.integration.external_id
+          }
+        }
+      }
+    ]
+  })
 }
 
 # Adjuntar la política de permisos necesaria para Datadog
-resource "aws_iam_user_policy_attachment" "datadog" {
-  user       = aws_iam_user.datadog.name
+resource "aws_iam_role_policy_attachment" "datadog" {
+  role       = aws_iam_role.datadog.name
   policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
 }
 
