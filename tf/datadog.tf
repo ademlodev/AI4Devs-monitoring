@@ -4,11 +4,11 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 # Crear la integración AWS-Datadog con la sintaxis correcta
-resource "datadog_integration_aws" "main" {
+resource "datadog_integration_aws_account" "main" {
   account_id = data.aws_caller_identity.current.account_id
   role_name  = "DatadogAWSIntegrationRole"
-  filter_tags = ["env:${var.environment}"]
-  host_tags = ["env:${var.environment}"]
+  cspm_resource_collection_enabled = true
+  metrics_collection_enabled = true
 }
 
 # Crear el rol IAM para Datadog
