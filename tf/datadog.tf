@@ -17,6 +17,16 @@ resource "datadog_integration_aws_account" "integration" {
     }
   }
   aws_partition  = "aws"
+  logs_config {
+    lambda_forwarder {}
+  }
+  metrics_config {
+    namespace_filters {}
+  }
+  resources_config {}
+  traces_config {
+    xray_services {}
+  }
 }
 
 # Crear el rol IAM para Datadog
